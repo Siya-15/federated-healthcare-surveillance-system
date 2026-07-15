@@ -69,3 +69,17 @@ Recovery Days
 
 ## Status
 In Progress
+
+## Database Schema Upgrade
+
+### Objective
+Objective D
+
+### Purpose
+Synchronize the PostgreSQL schema with the updated SQLAlchemy patient model.
+
+### Why
+The database schema must include the newly added clinical attributes before AI models can be trained using them.
+
+### Notes
+For this prototype, the patient table was recreated and reseeded because the data is synthetic. In production, schema migrations would be used.
