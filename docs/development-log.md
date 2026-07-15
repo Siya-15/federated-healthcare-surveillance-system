@@ -46,3 +46,26 @@ Recovery prediction
 Complication prediction
 
 Personalized treatment recommendation
+
+# Phase 2 - Recovery Time Prediction
+
+## Objective
+Objective E
+
+## Purpose
+Estimate the expected recovery duration for a patient using historical clinical records.
+
+## Model Type
+Regression
+
+## Inputs
+- Disease
+- Severity
+- Treatment
+- Age
+
+## Output
+Recovery Days
+
+## Status
+In Progress
