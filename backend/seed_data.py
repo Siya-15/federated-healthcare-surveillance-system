@@ -73,6 +73,34 @@ treatment_data = {
     ]
 }
 
+disease_profiles = {
+
+    "Flu": {
+        "severity": ["Mild", "Moderate"],
+        "recovery": (3, 7),
+        "complication_probability": 0.05
+    },
+
+    "Covid": {
+        "severity": ["Moderate", "Severe"],
+        "recovery": (7, 14),
+        "complication_probability": 0.15
+    },
+
+    "Dengue": {
+        "severity": ["Moderate", "Severe"],
+        "recovery": (8, 15),
+        "complication_probability": 0.20
+    },
+
+    "Malaria": {
+        "severity": ["Moderate", "Severe"],
+        "recovery": (10, 18),
+        "complication_probability": 0.25
+    }
+
+}
+
 
 
 for _ in range(500):
@@ -109,6 +137,23 @@ for _ in range(500):
         treatment_data[disease]
     )
 
+    profile = disease_profiles[disease]
+    severity = choice(
+        profile["severity"]
+    )
+
+    recovery_days = randint(
+    profile["recovery"][0],
+    profile["recovery"][1]
+    )
+
+    complications = (
+    "Yes"
+    if random() <
+    profile["complication_probability"]
+    else "None"
+    )
+
     success_probability = {
         "Paracetamol": 0.90,
         "Ibuprofen": 0.80,
@@ -124,19 +169,52 @@ for _ in range(500):
         "Antimalarial": 0.91
     }
 
+    probability = success_probability[treatment]
+
+    if severity == "Severe":
+        probability -= 0.15
+
+    elif severity == "Moderate":
+        probability -= 0.05
+
+    if complications == "Yes":
+        probability -= 0.10
+
+    outcome = (
+        "Recovered"
+        if random() < probability
+        else "Under Treatment"
+    )
+
     patient = Patient(
         hospital=choice(hospitals),
+        district=choice([
+            "Vellore",
+            "Chennai",
+            "Bangalore"
+        ]),
         age=randint(18, 80),
         gender=choice(["Male", "Female"]),
+        occupation=choice([
+            "Student",
+            "Farmer",
+            "Teacher",
+            "Healthcare Worker",
+            "Office Worker"
+        ]),
         symptoms=",".join(symptoms),
+        severity=severity,
+        symptom_duration=randint(1,10),
         disease=disease,
         treatment=treatment,
-        outcome=
-            "Recovered"
-            if random() <
-            success_probability[treatment]
-            else "Under Treatment",
-        visit_date=date.today() - timedelta(days=randint(0, 60))
+        outcome=outcome,
+
+        recovery_days=recovery_days,
+
+        complications=complications,
+
+        visit_date=date.today() -
+            timedelta(days=randint(0,60))
     )
 
     db.add(patient)

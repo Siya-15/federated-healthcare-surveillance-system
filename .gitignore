@@ -37,3 +37,9 @@ frontend/dist/
 
 # Python virtual envs
 backend/venv/
+
+# ML Models
+*.pkl
+
+# Generated datasets
+federated/*.csv
