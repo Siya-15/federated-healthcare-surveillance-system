@@ -83,3 +83,18 @@ The database schema must include the newly added clinical attributes before AI m
 
 ### Notes
 For this prototype, the patient table was recreated and reseeded because the data is synthetic. In production, schema migrations would be used.
+
+### Recovery Prediction API
+
+Status: In Progress
+
+Added request schema for recovery prediction.
+
+Fields:
+- disease
+- severity
+- treatment
+- age
+
+Purpose:
+Defines the API contract for recovery prediction and ensures consistency with the model's training features.
