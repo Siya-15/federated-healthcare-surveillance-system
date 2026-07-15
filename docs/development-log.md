@@ -98,3 +98,23 @@ Fields:
 
 Purpose:
 Defines the API contract for recovery prediction and ensures consistency with the model's training features.
+
+## Recovery Prediction Model
+
+### Status
+Training Complete ✅
+
+### Model
+Random Forest Regressor
+
+### Inputs
+- Disease
+- Severity
+- Treatment
+- Age
+
+### Output
+- Recovery Days
+
+### Next Step
+Expose model through FastAPI endpoint.
