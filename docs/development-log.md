@@ -20,3 +20,29 @@ Extended the patient schema to capture richer clinical information required for 
 - Complication prediction
 - District-wise outbreak detection
 - Personalized treatment recommendation
+
+## Feature: Clinically Correlated Synthetic Dataset
+
+### Objective
+Objective D
+
+### Purpose
+Generate realistic patient records with meaningful relationships between disease severity, recovery time, complications, and outcomes.
+
+### Relationships Introduced
+
+Disease → Severity
+
+Severity → Recovery Days
+
+Severity → Complications
+
+Complications → Outcome
+
+### Future Features Enabled
+
+Recovery prediction
+
+Complication prediction
+
+Personalized treatment recommendation
