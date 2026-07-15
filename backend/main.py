@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, get_db
 from models import Base, Patient
-from schemas import PatientResponse, PredictionRequest, TreatmentRequest
+from schemas import PatientResponse, PredictionRequest, TreatmentRequest, RecoveryRequest
 from symptom_surveillance import get_symptom_counts,detect_emerging_symptoms
 from treatment_effectiveness import (calculate_treatment_effectiveness)
 from disease_treatment_effectiveness import (disease_treatment_effectiveness)
@@ -27,6 +27,13 @@ app.add_middleware(
 model = joblib.load("disease_model.pkl")
 symptom_encoder = joblib.load("symptom_encoder.pkl")
 disease_encoder = joblib.load("disease_encoder.pkl")
+recovery_model = joblib.load("recovery_model.pkl")
+
+recovery_disease_encoder = joblib.load("recovery_disease_encoder.pkl")
+
+severity_encoder = joblib.load("severity_encoder.pkl")
+
+treatment_encoder = joblib.load("treatment_encoder.pkl")
 
 Base.metadata.create_all(bind=engine)
 
@@ -255,5 +262,29 @@ def novel_symptoms():
 
     return detect_novel_symptoms()
 
+@app.post("/predict-recovery")
+def predict_recovery(request: RecoveryRequest):
+    encoded_disease = recovery_disease_encoder.transform(
+    [request.disease]
+    )[0]
+    encoded_severity = severity_encoder.transform(
+    [request.severity]
+    )[0]
+    encoded_treatment = treatment_encoder.transform(
+    [request.treatment]
+    )[0]
+    features = [[
+    encoded_disease,
+    encoded_severity,
+    encoded_treatment,
+    request.age
+    ]]
+    prediction = recovery_model.predict(features)
+    return {
+    "expected_recovery_days": round(
+        prediction[0],
+        1
+    )
+    }
 
 

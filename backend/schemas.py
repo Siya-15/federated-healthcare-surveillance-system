@@ -20,3 +20,9 @@ class PredictionRequest(BaseModel):
 
 class TreatmentRequest(BaseModel):
     disease: str
+
+class RecoveryRequest(BaseModel):
+    disease: str
+    severity: str
+    treatment: str
+    age: int
