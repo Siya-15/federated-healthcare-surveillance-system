@@ -1,10 +1,22 @@
-# Phase 1 - Rich Clinical Database
+## Feature: Rich Clinical Database
 
-## Objective
-Objective D
+### Objective(s)
+- Objective D
+- Supports Objectives B and E
 
-## Purpose
-Upgrade the local clinical database to support advanced AI models for recovery prediction, complication prediction, and geospatial disease surveillance.
+### Purpose
+Extended the patient schema to capture richer clinical information required for advanced AI models and epidemiological surveillance.
 
-## Status
-In Progress
+### Fields Added
+- district
+- occupation
+- severity
+- symptom_duration
+- recovery_days
+- complications
+
+### Future Features Enabled
+- Recovery time prediction
+- Complication prediction
+- District-wise outbreak detection
+- Personalized treatment recommendation
