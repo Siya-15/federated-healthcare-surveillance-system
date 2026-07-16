@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, get_db
 from models import Base, Patient
-from schemas import PatientResponse, PredictionRequest, TreatmentRequest, RecoveryRequest, ComplicationRequest
+from schemas import PatientResponse, PredictionRequest, TreatmentRequest, RecoveryRequest, ComplicationRequest, ClinicalAssessmentRequest
 from symptom_surveillance import get_symptom_counts,detect_emerging_symptoms
 from treatment_effectiveness import (calculate_treatment_effectiveness)
 from disease_treatment_effectiveness import (disease_treatment_effectiveness)
@@ -14,6 +14,12 @@ from outbreak_risk import (calculate_outbreak_risk)
 from federated_metrics import get_federated_metrics
 from regional_outbreaks import (regional_outbreaks)
 from novel_symptom_detection import (detect_novel_symptoms)
+
+from services.treatment_service import get_best_treatment
+from services.disease_service import predict_disease
+from services.recovery_service import predict_recovery
+from services.complication_service import predict_complication
+
 app = FastAPI()
 
 app.add_middleware(
@@ -92,31 +98,13 @@ def get_statistics(db: Session = Depends(get_db)):
     }
 
 @app.post("/predict")
-def predict_disease(request: PredictionRequest):
+def predict(
+    request: PredictionRequest
+):
 
-    encoded_symptom = symptom_encoder.transform(
-        [request.symptoms]
+    return predict_disease(
+        request.symptoms
     )
-
-    prediction = model.predict(
-    encoded_symptom.reshape(-1, 1)
-    )
-
-    probabilities = model.predict_proba(
-        encoded_symptom.reshape(-1, 1)
-    )
-
-    confidence = max(probabilities[0]) * 100
-
-    disease = disease_encoder.inverse_transform(
-        prediction
-    )[0]
-
-    return {
-        "symptoms": request.symptoms,
-        "predicted_disease": disease,
-        "confidence": round(confidence, 2)
-    }
 
 @app.post("/recommend-treatment")
 def recommend_treatment(
@@ -124,50 +112,19 @@ def recommend_treatment(
     db: Session = Depends(get_db)
 ):
 
-    patients = db.query(Patient).filter(
-        Patient.disease == request.disease
-    ).all()
+    result = get_best_treatment(
+        request.disease,
+        db
+    )
 
-    if not patients:
+    if result is None:
         return {
             "error": "Disease not found"
         }
 
-    treatment_stats = {}
-
-    for patient in patients:
-
-        treatment = patient.treatment
-
-        if treatment not in treatment_stats:
-            treatment_stats[treatment] = {
-                "total": 0,
-                "recovered": 0
-            }
-
-        treatment_stats[treatment]["total"] += 1
-
-        if patient.outcome == "Recovered":
-            treatment_stats[treatment]["recovered"] += 1
-
-    best_treatment = None
-    best_rate = -1
-
-    for treatment, stats in treatment_stats.items():
-
-        success_rate = (
-            stats["recovered"] /
-            stats["total"]
-        ) * 100
-
-        if success_rate > best_rate:
-            best_rate = success_rate
-            best_treatment = treatment
-
     return {
         "disease": request.disease,
-        "recommended_treatment": best_treatment,
-        "success_rate": round(best_rate, 2)
+        **result
     }
 
 @app.get("/disease-trends/{disease}")
@@ -273,74 +230,55 @@ def novel_symptoms():
     return detect_novel_symptoms()
 
 @app.post("/predict-recovery")
-def predict_recovery(request: RecoveryRequest):
-    encoded_disease = recovery_disease_encoder.transform(
-    [request.disease]
-    )[0]
-    encoded_severity = severity_encoder.transform(
-    [request.severity]
-    )[0]
-    encoded_treatment = treatment_encoder.transform(
-    [request.treatment]
-    )[0]
-    features = [[
-    encoded_disease,
-    encoded_severity,
-    encoded_treatment,
-    request.age
-    ]]
-    prediction = recovery_model.predict(features)
-    return {
-    "expected_recovery_days": round(
-        prediction[0],
-        1
+def recovery_prediction(
+    request: RecoveryRequest
+):
+
+    return predict_recovery(
+        request.disease,
+        request.severity,
+        request.treatment,
+        request.age
     )
-    }
 
 @app.post("/predict-complication")
-def predict_complication(
+def complication_prediction(
     request: ComplicationRequest
 ):
-    encoded_disease = complication_disease_encoder.transform([request.disease])[0]
-    
 
-    encoded_severity = complication_severity_encoder.transform([request.severity])[0]
-
-    encoded_treatment = complication_treatment_encoder.transform([request.treatment])[0]
-    features = [[
-    encoded_disease,
-    encoded_severity,
-    encoded_treatment,
-    request.age
-    ]]
-    prediction = complication_model.predict(features)
-    probabilities = complication_model.predict_proba(features)
-
-    yes_probability = probabilities[0][1] * 100
-    none_probability = probabilities[0][0] * 100
-    if yes_probability < 30:
-        risk_level = "Low"
-
-    elif yes_probability < 70:
-        risk_level = "Moderate"
-
-    else:
-        risk_level = "High"
-
-    
-    result = complication_label_encoder.inverse_transform(prediction)[0]
-    confidence = max(probabilities[0]) * 100
-    return {
-    "complication_prediction": result,
-    "risk_level": risk_level,
-    "probability_of_complication": round(
-        yes_probability,
-        2
-    ),
-    "confidence": round(
-        confidence,
-        2
+    return predict_complication(
+        request.disease,
+        request.severity,
+        request.treatment,
+        request.age
     )
-    }
+
+@app.post("/clinical-assessment")
+def clinical_assessment(
+    request: ClinicalAssessmentRequest,
+    db: Session = Depends(get_db)
+):
+    encoded_symptom = symptom_encoder.transform(
+    [request.symptoms]
+)
+
+    prediction = model.predict(
+        encoded_symptom.reshape(-1, 1)
+    )
+
+    probabilities = model.predict_proba(
+        encoded_symptom.reshape(-1, 1)
+    )
+
+    confidence = max(probabilities[0]) * 100
+
+    predicted_disease = disease_encoder.inverse_transform(
+        prediction
+    )[0]
+
+    patients = db.query(Patient).filter(
+    Patient.disease == predicted_disease
+    ).all()
+
 
 

@@ -32,3 +32,7 @@ class ComplicationRequest(BaseModel):
     severity: str
     treatment: str
     age: int
+
+class ClinicalAssessmentRequest(BaseModel):
+    symptoms: str
+    age: int
