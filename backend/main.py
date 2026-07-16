@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, get_db
 from models import Base, Patient
-from schemas import PatientResponse, PredictionRequest, TreatmentRequest, RecoveryRequest
+from schemas import PatientResponse, PredictionRequest, TreatmentRequest, RecoveryRequest, ComplicationRequest
 from symptom_surveillance import get_symptom_counts,detect_emerging_symptoms
 from treatment_effectiveness import (calculate_treatment_effectiveness)
 from disease_treatment_effectiveness import (disease_treatment_effectiveness)
@@ -34,6 +34,16 @@ recovery_disease_encoder = joblib.load("recovery_disease_encoder.pkl")
 severity_encoder = joblib.load("severity_encoder.pkl")
 
 treatment_encoder = joblib.load("treatment_encoder.pkl")
+
+complication_model = joblib.load("complication_model.pkl")
+
+complication_disease_encoder = joblib.load("complication_disease_encoder.pkl")
+
+complication_severity_encoder = joblib.load("complication_severity_encoder.pkl")
+
+complication_treatment_encoder = joblib.load("complication_treatment_encoder.pkl")
+
+complication_label_encoder = joblib.load("complication_label_encoder.pkl")
 
 Base.metadata.create_all(bind=engine)
 
@@ -284,6 +294,52 @@ def predict_recovery(request: RecoveryRequest):
     "expected_recovery_days": round(
         prediction[0],
         1
+    )
+    }
+
+@app.post("/predict-complication")
+def predict_complication(
+    request: ComplicationRequest
+):
+    encoded_disease = complication_disease_encoder.transform([request.disease])[0]
+    
+
+    encoded_severity = complication_severity_encoder.transform([request.severity])[0]
+
+    encoded_treatment = complication_treatment_encoder.transform([request.treatment])[0]
+    features = [[
+    encoded_disease,
+    encoded_severity,
+    encoded_treatment,
+    request.age
+    ]]
+    prediction = complication_model.predict(features)
+    probabilities = complication_model.predict_proba(features)
+
+    yes_probability = probabilities[0][1] * 100
+    none_probability = probabilities[0][0] * 100
+    if yes_probability < 30:
+        risk_level = "Low"
+
+    elif yes_probability < 70:
+        risk_level = "Moderate"
+
+    else:
+        risk_level = "High"
+
+    
+    result = complication_label_encoder.inverse_transform(prediction)[0]
+    confidence = max(probabilities[0]) * 100
+    return {
+    "complication_prediction": result,
+    "risk_level": risk_level,
+    "probability_of_complication": round(
+        yes_probability,
+        2
+    ),
+    "confidence": round(
+        confidence,
+        2
     )
     }
 

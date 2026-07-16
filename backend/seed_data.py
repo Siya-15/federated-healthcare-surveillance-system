@@ -136,23 +136,62 @@ for _ in range(500):
     treatment = choice(
         treatment_data[disease]
     )
+    age=randint(18,80)
 
     profile = disease_profiles[disease]
+
     severity = choice(
         profile["severity"]
     )
 
-    recovery_days = randint(
-    profile["recovery"][0],
-    profile["recovery"][1]
+    # -------------------------------
+    # Complication Probability
+    # -------------------------------
+
+    complication_probability = profile[
+        "complication_probability"
+    ]
+
+    if age > 60:
+        complication_probability += 0.15
+
+    if severity == "Severe":
+        complication_probability += 0.10
+
+    if treatment in [
+        "Antiviral",
+        "Antimalarial"
+    ]:
+        complication_probability -= 0.05
+
+    complication_probability = min(
+        max(complication_probability, 0),
+        0.95
     )
 
     complications = (
-    "Yes"
-    if random() <
-    profile["complication_probability"]
-    else "None"
+        "Yes"
+        if random() < complication_probability
+        else "None"
     )
+
+    # -------------------------------
+    # Recovery Days
+    # -------------------------------
+
+    recovery_days = randint(
+        profile["recovery"][0],
+        profile["recovery"][1]
+    )
+
+    if severity == "Severe":
+        recovery_days += randint(3, 6)
+
+    if complications == "Yes":
+        recovery_days += randint(2, 5)
+
+    if age > 60:
+        recovery_days += randint(1, 3)
 
     success_probability = {
         "Paracetamol": 0.90,
@@ -193,7 +232,7 @@ for _ in range(500):
             "Chennai",
             "Bangalore"
         ]),
-        age=randint(18, 80),
+        age=age,
         gender=choice(["Male", "Female"]),
         occupation=choice([
             "Student",

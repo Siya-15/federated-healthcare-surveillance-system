@@ -26,3 +26,9 @@ class RecoveryRequest(BaseModel):
     severity: str
     treatment: str
     age: int
+
+class ComplicationRequest(BaseModel):
+    disease: str
+    severity: str
+    treatment: str
+    age: int
