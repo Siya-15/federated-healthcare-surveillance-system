@@ -1,25 +1,14 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 
-import Navbar from "./components/Navbar";
+import Layout from "./components/layout/Layout";
+import AppRoutes from "./routes/AppRoutes";
 
-import Dashboard from "./pages/Dashboard";
-import Prediction from "./pages/Prediction";
-import Treatment from "./pages/Treatment";
-import Outbreak from "./pages/Outbreak";
-
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
-      <Navbar />
-
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/prediction" element={<Prediction />} />
-        <Route path="/treatment" element={<Treatment />} />
-        <Route path="/outbreak" element={<Outbreak />} />
-      </Routes>
+      <Layout>
+        <AppRoutes />
+      </Layout>
     </BrowserRouter>
   );
 }
-
-export default App;
