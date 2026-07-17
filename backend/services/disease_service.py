@@ -23,7 +23,9 @@ def predict_disease(symptoms):
 
     confidence = max(probabilities[0]) * 100
 
+
     return {
         "predicted_disease": disease,
         "confidence": round(confidence, 2)
     }
+

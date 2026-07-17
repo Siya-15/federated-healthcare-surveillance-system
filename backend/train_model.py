@@ -22,8 +22,10 @@ df = pd.DataFrame(data)
 
 symptom_encoder = LabelEncoder()
 disease_encoder = LabelEncoder()
+print(df["symptoms"].unique())
 
 X = symptom_encoder.fit_transform(df["symptoms"])
+print(symptom_encoder.classes_)
 y = disease_encoder.fit_transform(df["disease"])
 
 model = RandomForestClassifier()

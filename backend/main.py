@@ -258,27 +258,78 @@ def clinical_assessment(
     request: ClinicalAssessmentRequest,
     db: Session = Depends(get_db)
 ):
-    encoded_symptom = symptom_encoder.transform(
-    [request.symptoms]
-)
-
-    prediction = model.predict(
-        encoded_symptom.reshape(-1, 1)
+    #disease prediction
+    disease_result = predict_disease(
+    request.symptoms
     )
 
-    probabilities = model.predict_proba(
-        encoded_symptom.reshape(-1, 1)
+    predicted_disease = disease_result[
+        "predicted_disease"
+    ]
+
+    #treatment recommendation
+    treatment_result = get_best_treatment(
+    predicted_disease,
+    db
     )
 
-    confidence = max(probabilities[0]) * 100
+    if treatment_result is None:
+        return {
+            "error": "Disease not found"
+        }
 
-    predicted_disease = disease_encoder.inverse_transform(
-        prediction
-    )[0]
+    recommended_treatment = treatment_result[
+        "recommended_treatment"
+    ]
 
-    patients = db.query(Patient).filter(
-    Patient.disease == predicted_disease
-    ).all()
+    #determine severity (basic rule)
+    if predicted_disease == "Flu":
+        severity = "Mild"
+    else:
+        severity = "Moderate"
+    
+    #recovery prediction
+    recovery_result = predict_recovery(
+    predicted_disease,
+    severity,
+    recommended_treatment,
+    request.age
+    )
+
+    #complication prediction
+    complication_result = predict_complication(
+    predicted_disease,
+    severity,
+    recommended_treatment,
+    request.age
+    )
+
+    summary = (
+    f"The patient is predicted to have "
+    f"{predicted_disease} "
+    f"with {disease_result['confidence']}% confidence. "
+    f"The recommended treatment is "
+    f"{recommended_treatment} "
+    f"with a historical success rate of "
+    f"{treatment_result['success_rate']}%. "
+    f"Expected recovery time is "
+    f"{recovery_result['expected_recovery_days']} days. "
+    f"Complication risk is "
+    f"{complication_result['risk_level']} "
+    f"({complication_result['probability_of_complication']}% probability)."
+    )
+
+    #return everything
+    return {
+    "disease_prediction": disease_result,
+    "treatment_recommendation": treatment_result,
+    "recovery_prediction": recovery_result,
+    "complication_prediction": complication_result,
+    "clinical_summary": summary
+    }
+
+
+
 
 
 
