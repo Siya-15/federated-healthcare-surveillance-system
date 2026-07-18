@@ -19,6 +19,7 @@ from services.treatment_service import get_best_treatment
 from services.disease_service import predict_disease
 from services.recovery_service import predict_recovery
 from services.complication_service import predict_complication
+from services.severity_service import predict_severity
 
 app = FastAPI()
 
@@ -29,27 +30,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+from pathlib import Path
 
-model = joblib.load("disease_model.pkl")
-symptom_encoder = joblib.load("symptom_encoder.pkl")
-disease_encoder = joblib.load("disease_encoder.pkl")
-recovery_model = joblib.load("recovery_model.pkl")
+BASE_DIR = Path(__file__).resolve().parent.parent
+MODEL_DIR = BASE_DIR / "backend" / "ml" / "saved_models"
 
-recovery_disease_encoder = joblib.load("recovery_disease_encoder.pkl")
+model = joblib.load(MODEL_DIR / "disease_model.pkl")
+symptom_encoder = joblib.load(MODEL_DIR / "symptom_encoder.pkl")
+disease_encoder = joblib.load(MODEL_DIR / "disease_encoder.pkl")
+recovery_model = joblib.load(MODEL_DIR / "recovery_model.pkl")
 
-severity_encoder = joblib.load("severity_encoder.pkl")
+recovery_disease_encoder = joblib.load(MODEL_DIR / "recovery_disease_encoder.pkl")
 
-treatment_encoder = joblib.load("treatment_encoder.pkl")
+severity_encoder = joblib.load(MODEL_DIR / "severity_encoder.pkl")
 
-complication_model = joblib.load("complication_model.pkl")
+treatment_encoder = joblib.load(MODEL_DIR / "treatment_encoder.pkl")
 
-complication_disease_encoder = joblib.load("complication_disease_encoder.pkl")
+complication_model = joblib.load(MODEL_DIR / "complication_model.pkl")
 
-complication_severity_encoder = joblib.load("complication_severity_encoder.pkl")
+complication_disease_encoder = joblib.load(MODEL_DIR / "complication_disease_encoder.pkl")
 
-complication_treatment_encoder = joblib.load("complication_treatment_encoder.pkl")
+complication_severity_encoder = joblib.load(MODEL_DIR / "complication_severity_encoder.pkl")
 
-complication_label_encoder = joblib.load("complication_label_encoder.pkl")
+complication_treatment_encoder = joblib.load(MODEL_DIR / "complication_treatment_encoder.pkl")
+
+complication_label_encoder = joblib.load(MODEL_DIR / "complication_label_encoder.pkl")
 
 Base.metadata.create_all(bind=engine)
 
@@ -282,11 +287,14 @@ def clinical_assessment(
         "recommended_treatment"
     ]
 
-    #determine severity (basic rule)
-    if predicted_disease == "Flu":
-        severity = "Mild"
-    else:
-        severity = "Moderate"
+    #determine severity
+    severity_result = predict_severity(
+    age=request.age,
+    disease=predicted_disease,
+    symptoms=request.symptoms,
+    symptom_duration=request.symptom_duration
+)
+    severity = severity_result["severity"]
     
     #recovery prediction
     recovery_result = predict_recovery(
@@ -308,6 +316,7 @@ def clinical_assessment(
     f"The patient is predicted to have "
     f"{predicted_disease} "
     f"with {disease_result['confidence']}% confidence. "
+    f"The predicted severity is {severity}. "
     f"The recommended treatment is "
     f"{recommended_treatment} "
     f"with a historical success rate of "
@@ -322,6 +331,7 @@ def clinical_assessment(
     #return everything
     return {
     "disease_prediction": disease_result,
+    "severity_prediction": severity_result,
     "treatment_recommendation": treatment_result,
     "recovery_prediction": recovery_result,
     "complication_prediction": complication_result,

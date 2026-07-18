@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import date
+from typing import List
 
 class PatientResponse(BaseModel):
     id: int
@@ -34,5 +35,6 @@ class ComplicationRequest(BaseModel):
     age: int
 
 class ClinicalAssessmentRequest(BaseModel):
-    symptoms: str
     age: int
+    symptoms: list[str]
+    symptom_duration: int

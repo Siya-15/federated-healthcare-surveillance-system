@@ -1,8 +1,13 @@
+from pathlib import Path
 import joblib
 
-model = joblib.load("disease_model.pkl")
-symptom_encoder = joblib.load("symptom_encoder.pkl")
-disease_encoder = joblib.load("disease_encoder.pkl")
+BASE_DIR = Path(__file__).resolve().parent.parent
+MODEL_DIR = BASE_DIR / "ml" / "saved_models"
+
+
+model = joblib.load(MODEL_DIR / "disease_model.pkl")
+symptom_encoder = joblib.load(MODEL_DIR / "symptom_encoder.pkl")
+disease_encoder = joblib.load(MODEL_DIR / "disease_encoder.pkl")
 
 
 def predict_disease(symptoms):

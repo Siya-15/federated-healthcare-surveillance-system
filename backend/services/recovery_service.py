@@ -1,18 +1,16 @@
 import joblib
+from pathlib import Path
 
-recovery_model = joblib.load("recovery_model.pkl")
+BASE_DIR = Path(__file__).resolve().parent.parent
+MODEL_DIR = BASE_DIR / "ml" / "saved_models"
 
-recovery_disease_encoder = joblib.load(
-    "recovery_disease_encoder.pkl"
-)
+recovery_model = joblib.load(MODEL_DIR / "recovery_model.pkl")
 
-severity_encoder = joblib.load(
-    "severity_encoder.pkl"
-)
+recovery_disease_encoder = joblib.load(MODEL_DIR / "recovery_disease_encoder.pkl")
 
-treatment_encoder = joblib.load(
-    "treatment_encoder.pkl"
-)
+severity_encoder = joblib.load(MODEL_DIR / "severity_encoder.pkl")
+
+treatment_encoder = joblib.load(MODEL_DIR / "treatment_encoder.pkl")
 
 
 def predict_recovery(

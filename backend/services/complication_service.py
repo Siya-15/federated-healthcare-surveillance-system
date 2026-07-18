@@ -1,24 +1,18 @@
 import joblib
+from pathlib import Path
 
-complication_model = joblib.load(
-    "complication_model.pkl"
-)
+BASE_DIR = Path(__file__).resolve().parent.parent
+MODEL_DIR = BASE_DIR / "ml" / "saved_models"
 
-disease_encoder = joblib.load(
-    "complication_disease_encoder.pkl"
-)
+complication_model = joblib.load(MODEL_DIR / "complication_model.pkl")
 
-severity_encoder = joblib.load(
-    "complication_severity_encoder.pkl"
-)
+disease_encoder = joblib.load(MODEL_DIR / "complication_disease_encoder.pkl")
 
-treatment_encoder = joblib.load(
-    "complication_treatment_encoder.pkl"
-)
+severity_encoder = joblib.load(MODEL_DIR / "complication_severity_encoder.pkl")
 
-label_encoder = joblib.load(
-    "complication_label_encoder.pkl"
-)
+treatment_encoder = joblib.load(MODEL_DIR / "complication_treatment_encoder.pkl")
+
+label_encoder = joblib.load(MODEL_DIR / "complication_label_encoder.pkl")
 
 
 def predict_complication(
