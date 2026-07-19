@@ -20,6 +20,7 @@ from services.disease_service import predict_disease
 from services.recovery_service import predict_recovery
 from services.complication_service import predict_complication
 from services.severity_service import predict_severity
+from services.anomaly_service import detect_novel_symptoms
 
 app = FastAPI()
 
@@ -272,6 +273,12 @@ def clinical_assessment(
         "predicted_disease"
     ]
 
+    novel_result = detect_novel_symptoms(
+    age=request.age,
+    disease=predicted_disease,
+    symptoms=request.symptoms
+)
+
     #treatment recommendation
     treatment_result = get_best_treatment(
     predicted_disease,
@@ -328,9 +335,16 @@ def clinical_assessment(
     f"({complication_result['probability_of_complication']}% probability)."
     )
 
+    if novel_result["status"] == "Possible Novel Pattern":
+        summary += (
+            " The patient's symptom profile is unusual compared to historical "
+            "clinical data and may require further investigation."
+        )
+
     #return everything
     return {
     "disease_prediction": disease_result,
+    "novel_symptom_detection": novel_result,
     "severity_prediction": severity_result,
     "treatment_recommendation": treatment_result,
     "recovery_prediction": recovery_result,
