@@ -10,7 +10,10 @@ from schemas import PatientResponse, PredictionRequest, TreatmentRequest, Recove
 from symptom_surveillance import get_symptom_counts,detect_emerging_symptoms
 from treatment_effectiveness import (calculate_treatment_effectiveness)
 from disease_treatment_effectiveness import (disease_treatment_effectiveness)
-from outbreak_risk import (calculate_outbreak_risk)
+
+from surveillance.disease_surveillance import (calculate_disease_surveillance)
+from surveillance.symptom_surveillance import (calculate_symptom_surveillance)
+
 from federated_metrics import get_federated_metrics
 from regional_outbreaks import (regional_outbreaks)
 from novel_symptom_detection import (detect_novel_symptoms)
@@ -214,12 +217,20 @@ def treatment_rankings():
         disease_treatment_effectiveness()
     )
 
-@app.get("/outbreak-risk")
-def outbreak_risk():
+@app.get("/surveillance/disease_surveillance")
+def disease_surveillance():
+    return calculate_disease_surveillance()
 
-    return (
-        calculate_outbreak_risk()
-    )
+@app.get("/surveillance/symptom_surveillance")
+def symptom_surveillance():
+    return calculate_symptom_surveillance()
+
+@app.get("/surveillance")
+def surveillance_dashboard():
+    return {
+        "disease_surveillance": calculate_disease_surveillance(),
+        "symptom_surveillance": calculate_symptom_surveillance(),
+    }
 
 @app.get("/federated-metrics")
 def federated_metrics():

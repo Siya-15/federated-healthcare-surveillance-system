@@ -6,7 +6,7 @@ from models import Patient
 from config.disease_profiles import DISEASES
 
 
-def calculate_outbreak_risk():
+def calculate_disease_surveillance():
 
     db = SessionLocal()
 
@@ -95,7 +95,7 @@ def calculate_outbreak_risk():
             "disease": disease,
             "current_cases":current,
             "previous_cases":previous,
-            "growth_percent":growth_percent,
+            "growth_percent":round(growth_percent, 2),
             "trend":trend,
             "alert_level":alert
         })
