@@ -3,6 +3,7 @@ from datetime import date, timedelta
 
 from database import SessionLocal
 from models import Patient
+from config.disease_profiles import DISEASES
 
 
 def calculate_outbreak_risk():
@@ -31,46 +32,35 @@ def calculate_outbreak_risk():
     )
 
     current_counts = Counter()
-
     previous_counts = Counter()
 
     for patient in current_patients:
-
-        symptoms = patient.symptoms.split(",")
-
-        for symptom in symptoms:
-
-            current_counts[symptom] += 1
+        current_counts[patient.disease] += 1
 
     for patient in previous_patients:
-
-        symptoms = patient.symptoms.split(",")
-
-        for symptom in symptoms:
-
-            previous_counts[symptom] += 1
+        previous_counts[patient.disease] += 1
 
     results = []
 
-    all_symptoms = set(
+    all_diseases = set(
         current_counts.keys()
     ).union(
         previous_counts.keys()
     )
 
-    for symptom in all_symptoms:
+    for disease in all_diseases:
 
-        current = current_counts[symptom]
+        current = current_counts[disease]
 
-        previous = previous_counts[symptom]
+        previous = previous_counts[disease]
 
         if previous == 0:
 
-            increase_percent = 100
+            growth_percent = 100
 
         else:
 
-            increase_percent = (
+            growth_percent = (
                 (
                     current - previous
                 )
@@ -78,36 +68,36 @@ def calculate_outbreak_risk():
                 previous
             ) * 100
 
-        if increase_percent > 75:
+        if current < 10:
+            alert = "LOW"
 
-            risk = "HIGH"
+        elif growth_percent >= 100:
+            alert = "CRITICAL"
 
-        elif increase_percent > 25:
+        elif growth_percent >= 50:
+            alert = "HIGH"
 
-            risk = "MEDIUM"
+        elif growth_percent >= 20:
+            alert = "MEDIUM"
 
         else:
+            alert = "LOW"
 
-            risk = "LOW"
+        if current > previous:
+            trend = "Increasing"
+        elif current < previous:
+            trend = "Decreasing"
+        else:
+            trend = "Stable"
 
         results.append({
 
-            "symptom": symptom,
-
-            "current_period":
-                current,
-
-            "previous_period":
-                previous,
-
-            "increase_percent":
-                round(
-                    increase_percent,
-                    2
-                ),
-
-            "risk":
-                risk
+            "disease": disease,
+            "current_cases":current,
+            "previous_cases":previous,
+            "growth_percent":growth_percent,
+            "trend":trend,
+            "alert_level":alert
         })
 
     db.close()
@@ -115,6 +105,6 @@ def calculate_outbreak_risk():
     return sorted(
         results,
         key=lambda x:
-            x["increase_percent"],
+            x["growth_percent"],
         reverse=True
     )
